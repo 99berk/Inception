@@ -1,0 +1,56 @@
+services:
+  nginx:
+    build: requirements/nginx/.
+    container_name: nginx
+    ports:
+      - 443:443
+    volumes:
+      - web_data:/var/www/html
+      - ./requirements/nginx/certs:/etc/nginx/certs:ro
+    networks:
+      - wp_network
+    depends_on:
+      - wordpress
+    restart: unless-stopped
+
+  wordpress:
+    build: requirements/wordpress/.
+    env_file:
+      - .env
+    container_name: wordpress
+    volumes:
+      - web_data:/var/www/html
+    networks:
+      - wp_network
+    depends_on:
+      - mariadb
+    restart: unless-stopped
+
+  mariadb:
+    build: requirements/mariadb/.
+    container_name: mariadb
+    env_file:
+      - .env
+    volumes:
+      - database:/var/lib/mysql
+    networks:
+      - wp_network
+    restart: unless-stopped
+
+volumes:
+  web_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bakgun/data
+  database:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bakgun/data
+
+networks:
+  wp_network:
+    driver: bridge
